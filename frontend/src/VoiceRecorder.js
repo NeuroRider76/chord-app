@@ -91,7 +91,7 @@ function VoiceRecorder() {
 
 const fetchHistory = async () => {
   try {
-    const res = await axios.get('http://localhost:5002/history');
+    const res = await axios.get('https://chord-app-production.up.railway.app/history');
     setHistory(res.data.posts);
   } catch (error) {
     console.error('Error fetching history:', error);
