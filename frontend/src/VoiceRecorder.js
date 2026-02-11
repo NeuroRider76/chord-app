@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 
 function VoiceRecorder() {
@@ -6,6 +6,7 @@ function VoiceRecorder() {
   const [transcript, setTranscript] = useState('');
   const [formattedPost, setFormattedPost] = useState('');
   const [status, setStatus] = useState('');
+  const [history, setHistory] = useState([]);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
 
@@ -49,13 +50,13 @@ function VoiceRecorder() {
       const formData = new FormData();
       formData.append('audio', audioBlob, 'recording.webm');
       
-      const transcribeRes = await axios.post('http://localhost:5002/transcribe', formData);
+      const transcribeRes = await axios.post('https://chord-app-production.up.railway.app/transcribe', formData);
       const transcriptText = transcribeRes.data.transcript;
       setTranscript(transcriptText);
 
       // Step 2: Format
       setStatus('Formatting...');
-      const formatRes = await axios.post('http://localhost:5002/format', {
+      const formatRes = await axios.post('https://chord-app-production.up.railway.app/format', {
         transcript: transcriptText
       });
       const formatted = formatRes.data.formatted_post;
@@ -71,9 +72,10 @@ function VoiceRecorder() {
   const postToX = async () => {
     try {
       setStatus('Posting to X...');
-      await axios.post('http://localhost:5002/post', {
-        content: formattedPost
-      });
+      await axios.post('https://chord-app-production.up.railway.app/post', {
+  content: formattedPost,
+  transcript: transcript
+});
       setStatus('Posted successfully! ✨');
       
       // Reset after 3 seconds
@@ -86,6 +88,19 @@ function VoiceRecorder() {
       setStatus('Post failed: ' + error.message);
     }
   };
+
+const fetchHistory = async () => {
+  try {
+    const res = await axios.get('http://localhost:5002/history');
+    setHistory(res.data.posts);
+  } catch (error) {
+    console.error('Error fetching history:', error);
+  }
+};
+
+useEffect(() => {
+  fetchHistory();
+}, []);
 
   return (
     <div style={{
@@ -174,6 +189,35 @@ function VoiceRecorder() {
           >
             Post to X →
           </button>
+        </div>
+      )}
+{/* History Section */}
+      {history.length > 0 && (
+        <div style={{ marginTop: '40px', borderTop: '1px solid #e5e7eb', paddingTop: '30px' }}>
+          <h2 style={{ fontSize: '24px', marginBottom: '20px' }}>History</h2>
+          {history.map((post) => (
+            <div key={post.id} style={{
+              padding: '15px',
+              backgroundColor: '#f9fafb',
+              borderRadius: '8px',
+              marginBottom: '15px'
+            }}>
+              <p style={{ marginBottom: '10px' }}>{post.formatted_content}</p>
+              <div style={{ fontSize: '12px', color: '#666' }}>
+                {new Date(post.posted_at).toLocaleString()}
+                {post.tweet_id && (
+                  <a 
+                    href={`https://x.com/NeuroRider76/status/${post.tweet_id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ marginLeft: '10px', color: '#3b82f6' }}
+                  >
+                    View on X →
+                  </a>
+                )}
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>
