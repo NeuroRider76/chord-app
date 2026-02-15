@@ -51,8 +51,21 @@ def transcribe():
     
     audio_file = request.files['audio']
     
+    # Get the correct extension from mimetype
+    mime_type = audio_file.mimetype
+    extension_map = {
+        'audio/webm': '.webm',
+        'audio/mp4': '.m4a',
+        'audio/x-m4a': '.m4a',
+        'audio/mpeg': '.mp3',
+        'audio/wav': '.wav',
+        'audio/ogg': '.ogg',
+        'video/mp4': '.mp4',
+    }
+    suffix = extension_map.get(mime_type, '.webm')
+    
     # Save temporarily
-    with tempfile.NamedTemporaryFile(delete=False, suffix='.webm') as tmp:
+    with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
         audio_file.save(tmp.name)
         tmp_path = tmp.name
     
