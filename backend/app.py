@@ -53,6 +53,9 @@ def transcribe():
     
     # Get the correct extension from mimetype
     mime_type = audio_file.mimetype
+    print(f"AUDIO MIME TYPE: {mime_type}")  # Add this line
+    print(f"AUDIO FILENAME: {audio_file.filename}")  # Add this line
+    
     extension_map = {
         'audio/webm': '.webm',
         'audio/mp4': '.m4a',
@@ -61,8 +64,12 @@ def transcribe():
         'audio/wav': '.wav',
         'audio/ogg': '.ogg',
         'video/mp4': '.mp4',
+        'audio/mp4a-latm': '.m4a',
+        'audio/aac': '.m4a',
+        'application/octet-stream': '.m4a',  # fallback for iOS
     }
-    suffix = extension_map.get(mime_type, '.webm')
+    suffix = extension_map.get(mime_type, '.m4a')  # default to m4a for iOS
+    print(f"USING SUFFIX: {suffix}")  # Add this line
     
     # Save temporarily
     with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
