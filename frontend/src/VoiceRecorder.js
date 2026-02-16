@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 
 function VoiceRecorder() {
+  const [wakeLock, setWakeLock] = useState(null);
   const [isRecording, setIsRecording] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [formattedPost, setFormattedPost] = useState('');
@@ -11,6 +12,12 @@ function VoiceRecorder() {
   const audioChunksRef = useRef([]);
 
   const startRecording = async () => {
+    try {
+    const lock = await navigator.wakeLock.request('screen');
+    setWakeLock(lock);
+  } catch (err) {
+    console.log('Wake lock not supported');
+  }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       mediaRecorderRef.current = new MediaRecorder(stream);
@@ -35,6 +42,10 @@ function VoiceRecorder() {
   };
 
   const stopRecording = () => {
+    if (wakeLock) {
+    wakeLock.release();
+    setWakeLock(null);
+  }
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
       mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
